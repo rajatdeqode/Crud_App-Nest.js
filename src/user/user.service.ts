@@ -1,5 +1,4 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schemas/user.schema';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,27 +10,7 @@ export class UserService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
   ) {}
-  async createUser(createUserDto: CreateUserDto) {
-    this.logger.log(
-      `createUser:Inside createUser Provider:${UserService.name}`,
-    );
-    try {
-      const saltOrRounds = 10;
-      const password = createUserDto.password;
-      const hash = await bcrypt.hash(password, saltOrRounds);
-      const createdUser = new this.userModel({
-        name: createUserDto.name,
-        email: createUserDto.email,
-        password: hash,
-        createdOn: new Date(),
-        isDeleted: false,
-      });
-      return createdUser.save();
-    } catch (e) {
-      console.log(e);
-      return this.logger.error(e.toString());
-    }
-  }
+
   async updateUser(id, updateUserDto: UpdateUserDto) {
     this.logger.log(
       `updateUser:Inside update user provider:${UserService.name}`,
@@ -89,16 +68,20 @@ export class UserService {
       return this.logger.error(e.toString());
     }
   }
-  async getAllUser() {
+  async getAllUser(query) {
     this.logger.log(
       `getAllUsers:Inside get all user provider ${UserService.name}`,
     );
+    const per_page = parseInt(query.per_page) ? parseInt(query.per_page) : 10;
+    const page_no = parseInt(query.page_no) ? parseInt(query.page_no) : 1;
     try {
       const getUser = await this.userModel
         .find()
         .where('isDeleted')
         .equals(false)
-        .select('-__v -createdOn -updatedOn -isDeleted -password');
+        .select('-__v -createdOn -updatedOn -isDeleted -password')
+        .limit(per_page)
+        .skip((page_no - 1) * per_page);
       return getUser;
     } catch (e) {
       console.log(e);

@@ -24,7 +24,7 @@ export class AuthService {
         email: signupUserDto.email,
       });
       if (findUser) {
-        throw new BadRequestException('User is already register');
+        return { status: 400, message: 'User is already register' };
       }
       const saltOrRounds = 10;
       const password = signupUserDto.password;
@@ -39,7 +39,7 @@ export class AuthService {
       return createdUser.save();
     } catch (e) {
       console.log(e);
-      return this.logger.error(e.toString());
+      this.logger.log(e.toString());
     }
   }
   async loginUser(loginUserDto: LoginUserDto) {
@@ -57,12 +57,12 @@ export class AuthService {
       }
       const access_token = this.jwtService.sign({
         email: user.email,
-        id: user._id,
+        userId: user._id,
       });
       return access_token;
     } catch (e) {
       console.log(e);
-      return this.logger.log(e.toString());
+      this.logger.log(e.toString());
     }
   }
 }
